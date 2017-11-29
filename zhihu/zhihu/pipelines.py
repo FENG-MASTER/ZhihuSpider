@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pymongo
 import pdb
-from .items import ZhihuItem,RelationItem,AnswerItem,QuestionItem,ArticleItem
+from .items import ZhihuItem,RelationItem,AnswerItem,QuestionItem,ArticleItem,QATopicItem
 
 # ------------------------------------------
 #   版本：1.0
@@ -40,6 +40,8 @@ class ZhihuPipeline(object):
             self._process_question_item(item)
         elif isinstance(item, ArticleItem):
             self._process_article_item(item)
+        elif isinstance(item,QATopicItem):
+            self._process_topic_item(item)
         else:
             #pdb.set_trace()
             self._process_relation_item(item)
@@ -66,3 +68,6 @@ class ZhihuPipeline(object):
 
     def _process_article_item(self,item):
         self.db.ArticleInfo.insert(dict(item))
+
+    def _process_topic_item(self,item):
+        self.db.TopicsInfo.insert(dict(item))
