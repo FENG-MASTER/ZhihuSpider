@@ -142,8 +142,8 @@ class QAZhihuSpider(RedisSpider):
         # 问题标题
         question_title = response.xpath(r"//h1[@class='QuestionHeader-title']/text()")[0].extract().strip()
         # 问题详细内容,这个大坑啊我靠,我眼花了都
-        question_content = re.search(r"(?:editableDetail)(.*)(?:visitCount)",
-                                     response.xpath(r"//div[@id='data']/@data-state")[0].extract()).group(0)
+        question_content = re.search(r"(?:editableDetail\":)(.*)(?:\"visitCount)",
+                                     response.xpath(r"//div[@id='data']/@data-state")[0].extract()).group(1)
         # id 直接从URL拿就好了
         question_id = response.url.split('/')[-1]
         # 问题创建时间
