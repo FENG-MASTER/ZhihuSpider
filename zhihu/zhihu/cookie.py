@@ -159,7 +159,7 @@ def initCookie(rconn, spiderName):
             cookie = getCookie(zhihu[0], zhihu[1], zhihu[2])
             if len(cookie) > 0:
                 rconn.set("%s:Cookies:%s--%s" % (spiderName, zhihu[0], zhihu[1]), cookie)
-    cookieNum = str(rconn.keys()).count("zhihuqaspider:Cookies")
+    cookieNum = str(rconn.keys()).count("%s:Cookies" % spiderName)
     logger.warning("The num of the cookies is %s" % cookieNum)
     if cookieNum == 0:
         logger.warning('Stopping...')

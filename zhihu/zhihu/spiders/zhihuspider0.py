@@ -14,7 +14,7 @@ from ..scrapy_redis.spiders import RedisSpider
 # ------------------------------------------
 
 class Zhihuspider0Spider(RedisSpider):
-    name = 'zhihuspider'
+    name = 'zhihuspider2'
     redis_key = "zhihuspider:start_urls"
     allowed_domains = ['zhihu.com']
     start_urls = ['http://zhihu.com/']

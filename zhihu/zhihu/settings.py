@@ -15,7 +15,7 @@ NEWSPIDER_MODULE = 'zhihu.spiders'
 
 
 
-
+# 重定向
 REDIRECT_ENABLED = False
 RETRY_TIMES = 1
 DOWNLOAD_TIMEOUT = 10 #下载超时时间
@@ -57,7 +57,7 @@ DOWNLOADER_MIDDLEWARES = {
 ITEM_PIPELINES = {
     'zhihu.pipelines.ZhihuPipeline': 301,
 }
-
+DOWNLOAD_DELAY = 3
 '''
 DOWNLOAD_DELAY = 3
 AUTOTHROTTLE_ENABLED = True
