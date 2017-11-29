@@ -57,7 +57,7 @@ DOWNLOADER_MIDDLEWARES = {
 ITEM_PIPELINES = {
     'zhihu.pipelines.ZhihuPipeline': 301,
 }
-DOWNLOAD_DELAY = 3
+
 '''
 DOWNLOAD_DELAY = 3
 AUTOTHROTTLE_ENABLED = True

@@ -7,7 +7,7 @@ from scrapy.http import Request
 from ..items import ZhihuItem, RelationItem, AnswerItem, QuestionItem, ArticleItem
 from ..scrapy_redis.spiders import RedisSpider
 from scrapy.http import Request
-from ..items import ZhihuItem, RelationItem, AnswerItem, QuestionItem, ArticleItem, QATopicItem
+from ..items import ZhihuItem, RelationItem, AnswerItem, QuestionItem, ArticleItem, QATopicItem, QAQuestionItem,QAAnswerItem
 from ..scrapy_redis.spiders import RedisSpider
 
 
@@ -19,6 +19,16 @@ class QAZhihuSpider(RedisSpider):
     start_urls = ['http://zhihu.com/']
 
     # handle_httpstatus_list=[200,302]
+
+    # 更多答案url
+    more_answer_url = "https://www.zhihu.com/api/v4/questions/{0}/answers?sort_by=default&include=data[*]" \
+                      ".is_normal,admin_closed_comment,reward_info,is_collapsed,annotation_action," \
+                      "annotation_detail,collapse_reason,is_sticky,collapsed_by,suggest_edit,comment_count," \
+                      "can_comment,content,editable_content,voteup_count,reshipment_settings,comment_permission" \
+                      ",created_time,updated_time,review_info,question,excerpt,relationship.is_authorized," \
+                      "is_author,voting,is_thanked,is_nothelp,upvoted_followees;" \
+                      "data[*].mark_infos[*].url;data[*].author.follower_count,badge[?(type=best_answerer)].topics&" \
+                      "limit={1}&offset={2}"
 
     def parse(self, response):
         body = str(response.body, encoding="utf8")
@@ -116,9 +126,80 @@ class QAZhihuSpider(RedisSpider):
         :param response:
         :return:
         """
-        question_title=response.xpath(r"//h1[@class='QuestionHeader-title']/text()")[0].extract().strip()
-        # 这个大坑啊我靠,我眼花了都
-        question_content=re.search(r"(?:editableDetail)(.*)(?:visitCount)",response.xpath(r"//div[@id='data']/@data-state")[0].extract()).group(0)
+        # 问题标题
+        question_title = response.xpath(r"//h1[@class='QuestionHeader-title']/text()")[0].extract().strip()
+        # 问题详细内容,这个大坑啊我靠,我眼花了都
+        question_content = re.search(r"(?:editableDetail)(.*)(?:visitCount)",
+                                     response.xpath(r"//div[@id='data']/@data-state")[0].extract()).group(0)
+        # id 直接从URL拿就好了
+        question_id = response.url.split('/')[-1]
+        # 问题创建时间
+        question_create_time = \
+            response.xpath(r"//div[@class='QuestionPage']/meta[@itemprop='dateCreated']/@content").extract()[0]
+        # 问题更新时间
+        question_update_time = \
+            response.xpath(r"//div[@class='QuestionPage']/meta[@itemprop='dateModified']/@content").extract()[0]
+        # 问题被浏览次数
+        question_view_count = response.xpath(
+            r"//div[@class='NumberBoard QuestionFollowStatus-counts']/div[@class='NumberBoard-item']/div[@class='NumberBoard-value']/text()").extract()[
+            0]
+        # 问题关注者数量
+        question_follower_count = \
+            response.xpath(r"//div[@class='QuestionPage']/meta[@itemprop='zhihu:followerCount']/@content").extract()[0]
+        # 问题回答数目
+        question_answer_count = \
+            response.xpath(r"//div[@class='QuestionPage']/meta[@itemprop='answerCount']/@content").extract()[0]
+        # 问题评论数目
+        question_comment_count = \
+            response.xpath(r"//div[@class='QuestionPage']/meta[@itemprop='commentCount']/@content").extract()[0]
 
+        # 问题所属话题ID列表
+        topic_list = response.xpath(r"//a[@class='TopicLink']")
 
-        pass
+        question_topics = []
+        for node in topic_list:
+            tid = node.xpath(r"./@href").xpath(r"./@href").extract()[0].split()[-1]
+            question_topics.append(tid)
+
+        item = QAQuestionItem()
+
+        item['question_id'] = question_id
+        item['create_time'] = question_create_time
+        item['update_time'] = question_update_time
+        item['answer_count'] = question_answer_count
+        item['followees_count'] = question_follower_count
+        item['title'] = question_title
+        item['content'] = question_content
+        item['view_count'] = question_view_count
+        item['topics'] = question_topics
+        item['comment_count'] = question_comment_count
+
+        yield item
+
+        # 处理问题下的答案
+        n = 0
+        while n + 10 <= question_answer_count:
+            yield Request(self.more_answer_url.format(question_id, n, n + 10),
+                          callback=self.parse_answer)
+            n += 10
+
+    def parse_answer(self, response):
+        """
+        解析答案 json格式
+        :param response:
+        :return:
+        """
+        answers = json.loads(response.text)
+
+        for ans in answers['data']:
+            item = QAAnswerItem()
+            item['answer_user_id'] = ans['author']['name']
+            item['question_id'] = ans['question']['id']
+            item['answer_id'] = ans['id']
+            item['create_time'] = ans['created_time']
+            item['update_time'] = ans['updated_time']
+            item['voteup_count'] = ans['voteup_count']
+            item['comment_count'] = ans['comment_count']
+            item['excerpt'] = ans['excerpt']
+            item['content'] = ans['content']
+            yield item
