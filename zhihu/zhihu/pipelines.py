@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 import pymongo
 import pdb
-from .items import ZhihuItem, RelationItem, AnswerItem, QuestionItem, ArticleItem, QATopicItem, QAAnswerItem, \
-    QAQuestionItem
+from .items import  QATopicItem, QAAnswerItem, QAQuestionItem
 
 
 # ------------------------------------------

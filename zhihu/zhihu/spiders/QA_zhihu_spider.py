@@ -4,11 +4,10 @@ import re
 
 import json
 from scrapy.http import Request
-from ..items import ZhihuItem, RelationItem, AnswerItem, QuestionItem, ArticleItem
+
 from ..scrapy_redis.spiders import RedisSpider
 from scrapy.http import Request
-from ..items import ZhihuItem, RelationItem, AnswerItem, QuestionItem, ArticleItem, QATopicItem, QAQuestionItem, \
-    QAAnswerItem
+from ..items import QATopicItem, QAQuestionItem, QAAnswerItem
 from ..scrapy_redis.spiders import RedisSpider
 
 
