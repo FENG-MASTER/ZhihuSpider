@@ -7,7 +7,8 @@ from scrapy.http import Request
 from ..items import ZhihuItem, RelationItem, AnswerItem, QuestionItem, ArticleItem
 from ..scrapy_redis.spiders import RedisSpider
 from scrapy.http import Request
-from ..items import ZhihuItem, RelationItem, AnswerItem, QuestionItem, ArticleItem, QATopicItem, QAQuestionItem,QAAnswerItem
+from ..items import ZhihuItem, RelationItem, AnswerItem, QuestionItem, ArticleItem, QATopicItem, QAQuestionItem, \
+    QAAnswerItem
 from ..scrapy_redis.spiders import RedisSpider
 
 
@@ -15,7 +16,7 @@ class QAZhihuSpider(RedisSpider):
     name = 'zhihuspider'
     redis_key = "zhihuspider:start_urls"
     allowed_domains = ['zhihu.com']
-    start_topics_id = ['19583842']
+    start_topics_id = ['19946241']
     start_urls = ['http://zhihu.com/']
 
     # handle_httpstatus_list=[200,302]
@@ -29,9 +30,6 @@ class QAZhihuSpider(RedisSpider):
                       "is_author,voting,is_thanked,is_nothelp,upvoted_followees;" \
                       "data[*].mark_infos[*].url;data[*].author.follower_count,badge[?(type=best_answerer)].topics&" \
                       "limit={1}&offset={2}"
-
-    def parse(self, response):
-        body = str(response.body, encoding="utf8")
 
     def start_requests(self):
         for topic in self.start_topics_id:
@@ -101,6 +99,13 @@ class QAZhihuSpider(RedisSpider):
                 tid = c.extract().strip()
                 yield Request('https://www.zhihu.com/topic/' + tid + '/top-answers',
                               callback=self.parse_topic_top_questions)
+                yield Request('https://www.zhihu.com/topic/' + tid + '/unanswered',
+                              callback=self.parse_topic_top_questions)
+        # 还要搜索本身话题的问题(当然,可能重复)
+        yield Request('https://www.zhihu.com/topic/' + now_topic_id + '/top-answers',
+                      callback=self.parse_topic_top_questions)
+        yield Request('https://www.zhihu.com/topic/' + now_topic_id + '/unanswered',
+                      callback=self.parse_topic_top_questions)
 
     def parse_topic_top_questions(self, response):
         """
@@ -118,7 +123,15 @@ class QAZhihuSpider(RedisSpider):
         next = response.xpath(r"//div[@class='zm-invite-pager']/span[last()]/a/@href")
         if len(next) != 0:
             next_url = next[0].extract().strip()
-            yield Request(response.url + next_url, callback=self.parse_topic_top_questions)
+            yield Request(response.url.split('?')[0] + next_url, callback=self.parse_topic_top_questions)
+
+    def parse_topic_unanswers(self, response):
+        """
+        解析未完成话题
+        :param response:
+        :return:
+        """
+        self.parse_topic_top_questions(response)
 
     def parse_question(self, response):
         """
@@ -147,8 +160,8 @@ class QAZhihuSpider(RedisSpider):
         question_follower_count = \
             response.xpath(r"//div[@class='QuestionPage']/meta[@itemprop='zhihu:followerCount']/@content").extract()[0]
         # 问题回答数目
-        question_answer_count = \
-            response.xpath(r"//div[@class='QuestionPage']/meta[@itemprop='answerCount']/@content").extract()[0]
+        question_answer_count = int(
+            response.xpath(r"//div[@class='QuestionPage']/meta[@itemprop='answerCount']/@content").extract()[0])
         # 问题评论数目
         question_comment_count = \
             response.xpath(r"//div[@class='QuestionPage']/meta[@itemprop='commentCount']/@content").extract()[0]
@@ -158,7 +171,7 @@ class QAZhihuSpider(RedisSpider):
 
         question_topics = []
         for node in topic_list:
-            tid = node.xpath(r"./@href").xpath(r"./@href").extract()[0].split()[-1]
+            tid = node.xpath(r"./@href").extract()[0].split('/')[-1]
             question_topics.append(tid)
 
         item = QAQuestionItem()
@@ -179,7 +192,7 @@ class QAZhihuSpider(RedisSpider):
         # 处理问题下的答案
         n = 0
         while n + 10 <= question_answer_count:
-            yield Request(self.more_answer_url.format(question_id, n, n + 10),
+            yield Request(self.more_answer_url.format(question_id, n + 10, n),
                           callback=self.parse_answer)
             n += 10
 
