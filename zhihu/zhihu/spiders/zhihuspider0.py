@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
 import re
-import pdb
-import json
 from scrapy.http import Request
 from ..items import ZhihuItem,RelationItem,AnswerItem,QuestionItem,ArticleItem
 from ..scrapy_redis.spiders import RedisSpider

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import scrapy
 import re
-import pdb
+
 import json
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
@@ -50,7 +50,7 @@ class ZhihuspiderSpider(RedisSpider):
                 )]
 
     def after_login(self,response):
-        pdb.set_trace()
+
         if json.loads(response.body)['msg'].encode('utf8') == "登录成功":
             self.logger.info("登录成功！%s" % str(response.meta['cookiejar']))
             print("登录成功！")

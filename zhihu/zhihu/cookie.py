@@ -155,11 +155,11 @@ def initCookie(rconn, spiderName):
     """ 获取所有账号的Cookies，存入Redis。如果Redis已有该账号的Cookie，则不再获取。 """
     for zhihu in myZhiHu:
         if rconn.get("%s:Cookies:%s--%s" % (
-        spiderName, zhihu[0], zhihu[1])) is None:  # 'zhihuspider:Cookies:账号--密码'，为None即不存在。
+                spiderName, zhihu[0], zhihu[1])) is None:  # 'zhihuspider:Cookies:账号--密码'，为None即不存在。
             cookie = getCookie(zhihu[0], zhihu[1], zhihu[2])
             if len(cookie) > 0:
                 rconn.set("%s:Cookies:%s--%s" % (spiderName, zhihu[0], zhihu[1]), cookie)
-    cookieNum = str(rconn.keys()).count("zhihuspider:Cookies")
+    cookieNum = str(rconn.keys()).count("zhihuqaspider:Cookies")
     logger.warning("The num of the cookies is %s" % cookieNum)
     if cookieNum == 0:
         logger.warning('Stopping...')
@@ -182,7 +182,7 @@ def updateCookie(accountText, rconn, spiderName, cookie):
 def removeCookie(accountText, rconn, spiderName):
     """ 删除某个账号的Cookie """
     rconn.delete("%s:Cookies:%s" % (spiderName, accountText))
-    cookieNum = str(rconn.keys()).count("zhihuspider:Cookies")
+    cookieNum = str(rconn.keys()).count("%s:Cookies" % (spiderName))
     logger.warning("The num of the cookies left is %s" % cookieNum)
     if cookieNum == 0:
         logger.warning("Stopping...")
