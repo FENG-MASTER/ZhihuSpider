@@ -62,6 +62,11 @@ class ProxyMiddleware(RetryMiddleware):
         if self.TIMES == 3:
             baseIP = random.choice(self.rconn.keys('IP:*'))
             ip = str(baseIP, 'utf-8').replace('IP:', '')
+            if ip == '127.0.0.1:80:10':
+                # 本机
+                logger.warning("The current IP is 127.0.0.1")
+                return
+
             try:
                 IP, PORT, status = ip.split(':')
                 request.meta['status'] = status
@@ -143,8 +148,6 @@ class CookiesMiddleware(RetryMiddleware):
         #         str(response.headers['location'],encoding='utf8'), callback=spider.parse_topic),response,spider)
         # el
         if response.status in [300, 301, 302, 303]:
-            # pdb.set_trace()
-
             return self._retry(request, reason, spider) or response  # 重试
 
         elif response.status in [403, 414]:

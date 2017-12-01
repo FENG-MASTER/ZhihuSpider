@@ -16,7 +16,7 @@ IPPOOLNUM=20 #一次性从网页获取的IP数量
 
 def GetIPPOOLS(num):
     #大象代理买的ip,5元20000个，每十个差不多有一个能用
-    IPPOOL=urllib.request.urlopen("http://tpv.daxiangdaili.com/ip/?tid=559480480576119&num="+str(num)+"&operator=1&filter=on&protocol=http&category=2&delay=1").read().decode("utf-8","ignore").split('\r\n')
+    IPPOOL=urllib.request.urlopen("http://tpv.daxiangdaili.com/ip/?tid=558252016637985&num="+str(num)+"&operator=1&filter=on&protocol=http&category=2&delay=1").read().decode("utf-8","ignore").split('\r\n')
     '''
     #自己获取的ip
     IPPOOLS1=urllib.request.urlopen("http://127.0.0.1:8000/?types=0&count=20&country=%E5%9B%BD%E5%86%85").read().decode("utf-8",'ignore')
@@ -44,7 +44,13 @@ def initIPPOOLS(rconn):
     else:
         logger.warning("The number of  the IP is %s!" % str(ipNum))
 
+    if b'IP:127.0.0.1:80:10' not in rconn.keys("IP:*"):
+        rconn.set("IP:127.0.0.1:80:10","127.0.0.1:80")
+
+
 def updateIPPOOLS(rconn,ip,status,flag=0): # 0代表对status减一，-1代表减2，1代表加1
+    if ip == '127.0.0.1':
+        return
     if int(status) < 1:
         removeIPPOOLS(rconn,ip,status)
         return
@@ -64,6 +70,8 @@ def updateIPPOOLS(rconn,ip,status,flag=0): # 0代表对status减一，-1代表�
         rconn.set("IP:%s:%s"%(ip,str(status)),ip)
 
 def removeIPPOOLS(rconn,ip,status):
+    if ip == '127.0.0.1':
+        return
     logger.error("IP:%s not available ! System is deleting" % ip)
     try:
         rconn.delete('IP:' + ip + ':' + status)

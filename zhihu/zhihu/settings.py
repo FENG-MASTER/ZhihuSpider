@@ -17,7 +17,7 @@ NEWSPIDER_MODULE = 'zhihu.spiders'
 
 # 重定向
 REDIRECT_ENABLED = False
-RETRY_TIMES = 1
+RETRY_TIMES = 30
 DOWNLOAD_TIMEOUT = 10 #下载超时时间
 
 
@@ -49,15 +49,16 @@ MONGO_DATABASE = 'zhihu3'
 DOWNLOADER_MIDDLEWARES = {
     'zhihu.middlewares.UserAgentMiddleware': 543,
     'zhihu.middlewares.CookiesMiddleware': 544,
-    #'zhihu.middlewares.ProxyMiddleware':125,
-    #"scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware": 545,
+    'zhihu.middlewares.ProxyMiddleware':125,
+    "scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware": 545,
 }
 
 
 ITEM_PIPELINES = {
     'zhihu.pipelines.ZhihuPipeline': 301,
 }
-DOWNLOAD_DELAY = 1
+
+
 '''
 DOWNLOAD_DELAY = 3
 AUTOTHROTTLE_ENABLED = True

@@ -15,7 +15,7 @@ class QAZhihuSpider(RedisSpider):
     name = 'zhihuspider'
     redis_key = "zhihuspider:start_urls"
     allowed_domains = ['zhihu.com']
-    start_topics_id = ['19946241']
+    start_topics_id = ['19776749']
     start_urls = ['http://zhihu.com/']
 
     # handle_httpstatus_list=[200,302]
